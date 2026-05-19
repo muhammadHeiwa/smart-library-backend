@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.smartlibrary.smart_library_api.dto.UserDto.*;
 import com.smartlibrary.smart_library_api.dto.UserDto.AnggotaResponse;
 import com.smartlibrary.smart_library_api.dto.UserDto.ApiResponse;
 import com.smartlibrary.smart_library_api.dto.UserDto.CreateAnggotaRequest;
@@ -84,6 +83,7 @@ public class AnggotaController {
             return ResponseEntity.status(201)
                     .body(ApiResponse.success("Anggota berhasil ditambahkan", response));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
