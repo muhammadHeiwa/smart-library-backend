@@ -113,6 +113,8 @@ server.port=8080
 
 ```bash
 mvn spring-boot:run
+#or
+.\mvnw spring-boot:run
 ```
 
 ---
