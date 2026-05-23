@@ -1,9 +1,12 @@
 package com.smartlibrary.smart_library_api.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Kelas Admin - Turunan dari User (Inheritance).
@@ -14,7 +17,7 @@ import lombok.NoArgsConstructor;
  * - Polymorphism: override/extend behaviour dari parent class
  */
 @Entity
-@Table(name = "admins")
+@Table(name = "tb_admins")
 @PrimaryKeyJoinColumn(name = "user_id")
 @Getter
 @Setter

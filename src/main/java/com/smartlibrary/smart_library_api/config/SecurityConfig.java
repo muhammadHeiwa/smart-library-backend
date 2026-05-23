@@ -89,10 +89,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // Endpoint Anggota dan Admin
                 .requestMatchers("/api/anggota/**").hasAnyRole("ADMIN", "ANGGOTA")
-                // Semua request lain harus terotentikasi
                 .anyRequest().authenticated()
             )
-            // Tetap pasang provider yang sudah dikunci ke manager di atas
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(authenticationJwtTokenFilter(),
                     UsernamePasswordAuthenticationFilter.class);

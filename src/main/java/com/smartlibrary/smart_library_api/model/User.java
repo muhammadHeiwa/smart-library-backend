@@ -28,7 +28,7 @@ import lombok.Setter;
  * - Encapsulation: Atribut private, diakses via getter/setter (Lombok)
  */
 @Entity
-@Table(name = "users")
+@Table(name = "tb_users")
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter

@@ -1,12 +1,18 @@
 package com.smartlibrary.smart_library_api.model;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Kelas Anggota - Turunan dari User (Inheritance).
@@ -18,7 +24,7 @@ import java.util.List;
  * - Encapsulation: daftarPinjaman adalah private ArrayList
  */
 @Entity
-@Table(name = "anggota")
+@Table(name = "tb_anggota")
 @PrimaryKeyJoinColumn(name = "user_id")
 @Getter
 @Setter
@@ -43,7 +49,7 @@ public class Anggota extends User {
      * Di sini hanya disimpan ID peminjaman sebagai referensi.
      */
     @ElementCollection
-    @CollectionTable(name = "anggota_daftar_pinjaman",
+    @CollectionTable(name = "tb_anggota_daftar_pinjaman",
                      joinColumns = @JoinColumn(name = "anggota_id"))
     @Column(name = "peminjaman_id")
     private List<String> daftarPinjamanIds = new ArrayList<>();

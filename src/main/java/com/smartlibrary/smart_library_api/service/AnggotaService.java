@@ -65,12 +65,8 @@ public class AnggotaService {
 
         anggota.setTotalPinjamanAktif(0);
         anggota.setDaftarPinjamanIds(new java.util.ArrayList<>());
-
-        // 1. Simpan dan paksa commit saat ini juga ke Azure
         Anggota savedAnggota = anggotaRepository.saveAndFlush(anggota);
 
-        // 2. JALAN PINTAS: Jangan biarkan mapToAnggotaResponse memicu Lazy Loading ke database.
-        // Kita langsung bentuk objek responsenya secara manual di sini demi mematikan bug Hibernate.
         return new AnggotaResponse(
                 savedAnggota.getUserId(), 
                 savedAnggota.getNama(), 
@@ -81,7 +77,7 @@ public class AnggotaService {
                 0, 
                 savedAnggota.getIsActive(), 
                 savedAnggota.getCreatedAt(),
-                new java.util.ArrayList<>() // bypass list kosong murni
+                new java.util.ArrayList<>() 
         );
     }
 
@@ -176,6 +172,15 @@ public class AnggotaService {
         long count = anggotaRepository.count() + 1;
         return String.format("ANG-%05d", count);
     }
+
+    @Transactional
+public void hapusAnggota(String userId) {
+    if (!anggotaRepository.existsById(userId)) {
+        throw new RuntimeException("Anggota tidak ditemukan");
+    }
+    anggotaRepository.deleteById(userId);
+    userRepository.deleteById(userId); // Hapus entitas di tabel induk users
+}
 
     // ===== Inner DTO =====
     public record AnggotaStatsResponse(long total, long aktif, long nonAktif) {}

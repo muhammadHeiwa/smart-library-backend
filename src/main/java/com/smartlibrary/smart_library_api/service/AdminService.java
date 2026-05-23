@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.smartlibrary.smart_library_api.dto.UserDto.AdminResponse;
 import com.smartlibrary.smart_library_api.dto.UserDto.UpdateAdminRequest;
 import com.smartlibrary.smart_library_api.model.Admin;
+import com.smartlibrary.smart_library_api.model.User;
 import com.smartlibrary.smart_library_api.repository.AdminRepository;
 import com.smartlibrary.smart_library_api.repository.UserRepository;
 
@@ -104,5 +105,50 @@ public class AdminService {
             adminRepository.save(defaultAdmin);
             System.out.println("[INIT] Default admin dibuat: admin@smartlibrary.com / Admin@123");
         }
+    }
+
+    @Transactional
+public void hapusAdmin(String userId) {
+    if (!adminRepository.existsById(userId)) {
+        throw new RuntimeException("Admin tidak ditemukan");
+    }
+    adminRepository.deleteById(userId);
+    userRepository.deleteById(userId);
+}
+
+/**
+     * Mengubah status aktif/nonaktif administrator (Toggle Status).
+     * Pastikan nama method ini adalah toggleStatus agar klop dengan AdminController.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void toggleStatus(String userId) {
+        System.out.println("[TOGGLE LOG] Mulai proses toggle untuk ID: " + userId);
+
+        // 1. Ambil data dari User (tabel induk)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User tidak ditemukan dengan ID: " + userId));
+                
+        boolean statusLama = user.getIsActive();
+        boolean statusBaru = !statusLama;
+        
+        System.out.println("[TOGGLE LOG] Status LAMA di tb_users: " + statusLama);
+        System.out.println("[TOGGLE LOG] Mengubah status BARU menjadi: " + statusBaru);
+        
+        // 2. Set status baru
+        user.setIsActive(statusBaru);
+        
+        // 3. Paksa tulis ke database induk
+        userRepository.saveAndFlush(user);
+        System.out.println("[TOGGLE LOG] Sukses saveAndFlush ke tb_users");
+        
+        // 4. Sinkronkan ke tabel anak (Admin)
+        adminRepository.findById(userId).ifPresent(admin -> {
+            System.out.println("[TOGGLE LOG] Sinkronisasi ke tabel tb_admins untuk ID: " + userId);
+            admin.setIsActive(statusBaru);
+            adminRepository.saveAndFlush(admin);
+            System.out.println("[TOGGLE LOG] Sukses saveAndFlush ke tb_admins");
+        });
+
+        System.out.println("[TOGGLE LOG] Proses toggle SELESAI untuk ID: " + userId);
     }
 }

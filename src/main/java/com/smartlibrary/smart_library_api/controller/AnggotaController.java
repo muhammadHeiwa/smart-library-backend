@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -83,22 +83,32 @@ public class AnggotaController {
             return ResponseEntity.status(201)
                     .body(ApiResponse.success("Anggota berhasil ditambahkan", response));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
     /**
      * GET /api/anggota/{userId}
-     * Detail anggota - Admin atau Anggota itu sendiri.
+     * Detail anggota - Bisa diakses oleh Admin atau Anggota itu sendiri secara aman.
      */
     @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.username")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANGGOTA')") 
     public ResponseEntity<ApiResponse<AnggotaResponse>> getAnggotaById(
-            @PathVariable String userId) {
+            @PathVariable String userId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails currentUser) {
         try {
+            // Pengaman tambahan lewat kode program: Anggota tidak boleh intip data ID milik anggota lain
+            boolean isAdmin = currentUser.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            
+            // Mengambil data user untuk dicek kecocokan emailnya jika dia bukan admin
             AnggotaResponse response = anggotaService.getAnggotaById(userId);
-            return ResponseEntity.ok(ApiResponse.success("Detail anggota", response));
+            
+            if (!isAdmin && !currentUser.getUsername().equalsIgnoreCase(response.getEmail())) {
+                return ResponseEntity.status(403).body(ApiResponse.error("Anda tidak memiliki hak akses untuk melihat profil ini!"));
+            }
+
+            return ResponseEntity.ok(ApiResponse.success("Detail anggota berhasil diambil", response));
         } catch (Exception e) {
             return ResponseEntity.status(404).body(ApiResponse.error(e.getMessage()));
         }
@@ -123,18 +133,31 @@ public class AnggotaController {
 
     /**
      * PUT /api/anggota/{userId}
-     * Update data anggota - Admin atau Anggota itu sendiri.
+     * Update data anggota - Diizinkan untuk Admin atau Anggota itu sendiri
      */
     @PutMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.username")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ANGGOTA')") // <--- PASTIKAN role ANGGOTA ada di sini
     public ResponseEntity<ApiResponse<AnggotaResponse>> updateAnggota(
             @PathVariable String userId,
-            @RequestBody UpdateAnggotaRequest request) {
+            @Valid @RequestBody UpdateAnggotaRequest request,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails currentUser) {
         try {
+            // Pengaman tambahan lewat kode program agar Anggota tidak bisa meretas/mengubah data ID Anggota lain
+            boolean isAdmin = currentUser.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            
+            // Ambil data lama untuk mencocokkan email jika dia bukan admin
+            AnggotaResponse anggotaLama = anggotaService.getAnggotaById(userId);
+            
+            if (!isAdmin && !currentUser.getUsername().equalsIgnoreCase(anggotaLama.getEmail())) {
+                return ResponseEntity.status(403).body(ApiResponse.error("Anda tidak memiliki hak akses untuk mengubah profil ini!"));
+            }
+
+            // Eksekusi update ke database
             AnggotaResponse response = anggotaService.updateAnggota(userId, request);
-            return ResponseEntity.ok(ApiResponse.success("Data anggota berhasil diperbarui", response));
+            return ResponseEntity.ok(ApiResponse.success("Profil anggota berhasil diperbarui", response));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+            return ResponseEntity.status(400).body(ApiResponse.error(e.getMessage()));
         }
     }
 
@@ -142,7 +165,7 @@ public class AnggotaController {
      * PATCH /api/anggota/{userId}/toggle-status
      * Aktifkan/nonaktifkan anggota - hanya Admin.
      */
-    @PatchMapping("/{userId}/toggle-status")
+    @PutMapping("/{userId}/toggle-status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AnggotaResponse>> toggleStatus(
             @PathVariable String userId) {
@@ -170,4 +193,15 @@ public class AnggotaController {
             return ResponseEntity.status(404).body(ApiResponse.error(e.getMessage()));
         }
     }
+
+    @DeleteMapping("/{userId}")
+public ResponseEntity<?> hapusAnggota(@PathVariable String userId) {
+    try {
+        anggotaService.hapusAnggota(userId); 
+        return ResponseEntity.ok(ApiResponse.success("Anggota berhasil dihapus", null));
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+    }
 }
+}
+
