@@ -10,7 +10,6 @@ import com.smartlibrary.smart_library_api.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class BookService {
@@ -81,13 +80,11 @@ public class BookService {
 
         setBookData(existingBook, request);
 
-        if (existingBook instanceof PhysicalBook) {
-            PhysicalBook physicalBook = (PhysicalBook) existingBook;
+        if (existingBook instanceof PhysicalBook physicalBook) {
             physicalBook.setShelfLocation(request.getShelfLocation());
         }
 
-        if (existingBook instanceof DigitalBook) {
-            DigitalBook digitalBook = (DigitalBook) existingBook;
+        if (existingBook instanceof DigitalBook digitalBook) {
             digitalBook.setFileUrl(request.getFileUrl());
         }
 
@@ -160,6 +157,6 @@ public class BookService {
     private List<BookResponse> toBookResponseList(List<Book> books) {
         return books.stream()
                 .map(BookResponse::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

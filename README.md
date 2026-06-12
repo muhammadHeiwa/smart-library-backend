@@ -128,12 +128,12 @@ java -version
 javac -version
 ```
 
-If project uses Java 17:
+If project uses Java 21:
 
 Update `pom.xml`
 
 ```xml
-<java.version>17</java.version>
+<java.version>21</java.version>
 ```
 
 Then run again:
