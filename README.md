@@ -348,3 +348,8 @@ application-example.properties -> committed
   - DigitalBook
   - REST API
   - Database Integration
+- Angga Nur Gunawan
+ - Admin Management
+ - Anggota Management
+ - Login Admin & Anggota
+ - Edit Profile Admin & Anggota
